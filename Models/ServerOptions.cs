@@ -8,9 +8,10 @@ namespace api_corelation.Models
 {
     public class ServerOptions
     {
-        public int Port = 8080;
+        public int Port;
         public string WorkingDirectory;
         public string[] Headers;
+        public bool IsLaunched = false;
         public ServerOptions(int port, string directory, string[] headers) { 
             Port = port;
             WorkingDirectory = directory;

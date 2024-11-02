@@ -12,24 +12,13 @@
 		ExtendClientAreaTitleBarHeightHint="-1"
 		>
 	<Window.Styles>
-	<Style Selector="ToggleButton.ProxyButton">
-		<Style Selector="^:unchecked ContentPresenter#PART_ContentPresenter">
-			<Setter Property="Background" Value="Gray"/>
-			<Setter Property="Content" Value="Proxy Off"/>
-		</Style>
-		<Style Selector="^:checked ContentPresenter#PART_ContentPresenter">
-			<Setter Property="Background" Value="#FFFF6B14"/>
-			<Setter Property="Content" Value="Proxy On"/>
-		</Style>
-	</Style>
 	</Window.Styles>
 	<Border BorderThickness="1.5" BorderBrush="#D2B1A38E" IsVisible="True">
 		<StackPanel>
 			<Label Margin="10,5,10,0" BorderBrush="White">Simple Servers</Label>
 			<DockPanel>
-				<!--<ToggleButton Classes="ProxyButton" IsChecked="{Binding IsProxied, Mode = TwoWay}" Width="80" Height="30" Margin="10,40,10,0"></ToggleButton>-->
 			</DockPanel>
-			<Button Margin="10,10,10,10" Content="Add Server"></Button>
+			<Button Margin="10,10,10,10" Content="Add Server" Command="{Binding AddServerCommand}"></Button>
 			<TreeDataGrid Source="{Binding ServerGridData}" HorizontalAlignment="Stretch"
 			  BorderThickness="2" BorderBrush="Gray" CanUserResizeColumns="True">
 			</TreeDataGrid>
