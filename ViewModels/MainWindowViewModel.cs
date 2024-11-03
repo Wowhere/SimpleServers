@@ -9,6 +9,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
+using Avalonia.Data;
 
 namespace api_corelation.ViewModels
 {
@@ -50,7 +51,7 @@ namespace api_corelation.ViewModels
         public void AddServer()
         {
             var headers = new string[1] { "" };
-            var server = new ServerOptions(8080, "", headers);
+            var server = new ServerOptions("8080", "", headers);
             ServerRows.Add(server);
         }
         private void LaunchServer(object sender, RoutedEventArgs e) {
@@ -60,29 +61,37 @@ namespace api_corelation.ViewModels
             {
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-
+                    options.server.Start();
                 });
             } else
             {
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-
+                    options.server.Stop();
                 });
             }
             }
-        private ToggleButton LaunchControlInit()
+        private ToggleButton LaunchControlInit(ServerOptions opt)
         {
             var AddServerButton = new ToggleButton();
+            //AddServerButton. = new Binding("") {
+            //    Source = opt.IsLaunched,
+            //    Mode=BindingMode.TwoWay};
             AddServerButton.Click += LaunchServer;
             return AddServerButton;
         }
 
         public void TreeDataGridInit()
         {
-            TextColumn<ServerOptions, int> PortColumn = new TextColumn<ServerOptions, int>("Port", x => x.Port);
-            TextColumn<ServerOptions, string> DirectoryColumn = new TextColumn<ServerOptions, string>("Directory", x => x.WorkingDirectory);
+            var EditOptions = new TextColumnOptions<ServerOptions>
+            {
+                BeginEditGestures = BeginEditGestures.Tap,
+                MinWidth = new GridLength(80, GridUnitType.Pixel)
+            };
+            TextColumn<ServerOptions, string> PortColumn = new TextColumn<ServerOptions, string>("Port", x => x.Port, (r, v) => r.Port = v, options: EditOptions);
+            TextColumn<ServerOptions, string> DirectoryColumn = new TextColumn<ServerOptions, string>("Directory", x => x.WorkingDirectory, (r, v) => r.WorkingDirectory = v, options: EditOptions);
             TextColumn<ServerOptions, string[]> HeadersColumn = new TextColumn<ServerOptions, string[]>("Headers", x => x.Headers);
-            TemplateColumn<ServerOptions> ButtonColumn = new TemplateColumn<ServerOptions>("", new FuncDataTemplate<ServerOptions>((a, e) => LaunchControlInit(), supportsRecycling: true));
+            TemplateColumn<ServerOptions> ButtonColumn = new TemplateColumn<ServerOptions>("", new FuncDataTemplate<ServerOptions>((a, e) => LaunchControlInit(a), supportsRecycling: true));
             ServerGridData = new FlatTreeDataGridSource<ServerOptions>(ServerRows)
             {
                 Columns =

@@ -8,20 +8,20 @@ using System.Threading.Tasks;
 
 namespace api_corelation.Models
 {
-    class SimpleHttpServer
+    public class SimpleHttpServer
     {
         private HttpListener _listener;
         private string _folderPath;
 
-        public SimpleHttpServer(string folderPath)
+        public SimpleHttpServer(string port, string folderPath)
         {
             _folderPath = folderPath;
             _listener = new HttpListener();
+            _listener.Prefixes.Add($"http://*:{port}/");
         }
 
-        public void Start(int port)
-        {
-            _listener.Prefixes.Add($"http://*:{port}/");
+        public void Start()
+        {     
             _listener.Start();
         }
 

@@ -8,14 +8,16 @@ namespace api_corelation.Models
 {
     public class ServerOptions
     {
-        public int Port;
+        public string Port;
         public string WorkingDirectory;
         public string[] Headers;
         public bool IsLaunched = false;
-        public ServerOptions(int port, string directory, string[] headers) { 
+        public SimpleHttpServer server;
+        public ServerOptions(string port, string directory, string[] headers) { 
             Port = port;
             WorkingDirectory = directory;
             Headers = headers;
+            server = new SimpleHttpServer(port, WorkingDirectory);
         }
     }
 }
