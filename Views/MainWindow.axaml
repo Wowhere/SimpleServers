@@ -18,7 +18,7 @@
 			<Label Margin="10,5,10,0" BorderBrush="White">Simple Servers</Label>
 			<DockPanel>
 			</DockPanel>
-			<Button Margin="10,10,10,10" Content="Add Server" Command="{Binding AddServerCommand}"></Button>
+			<Button Background="BlueViolet" Margin="10,10,10,10" Content="Add Server" Command="{Binding AddServerCommand}"></Button>
 			<TreeDataGrid Source="{Binding ServerGridData}" HorizontalAlignment="Stretch"
 			  BorderThickness="2" BorderBrush="Gray" CanUserResizeColumns="True">
 			</TreeDataGrid>

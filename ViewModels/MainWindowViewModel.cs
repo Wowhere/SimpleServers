@@ -10,6 +10,9 @@ using Avalonia.Interactivity;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using Avalonia.Data;
+using Avalonia.Styling;
+using Avalonia.Media;
+using DynamicData.Kernel;
 
 namespace api_corelation.ViewModels
 {
@@ -54,13 +57,36 @@ namespace api_corelation.ViewModels
             var server = new ServerOptions("8080", "", headers);
             ServerRows.Add(server);
         }
-        private void LaunchServer(object sender, RoutedEventArgs e) {
-            ToggleButton startButton = (ToggleButton)sender;
+        private void ToggleHttpServerStyle(bool status, Button button)
+        {
+            if (status)
+            {
+                button.Styles.Add(new Style()
+                {
+                    Setters = {
+                    new Setter(Button.BackgroundProperty, new SolidColorBrush(Color.Parse("#D70040")) ),
+                    new Setter(Button.ContentProperty, "Stop Server" )
+                }
+                });
+            }
+            else
+            {
+                button.Styles.Add(new Style()
+                {
+                    Setters = {
+                    new Setter(Button.BackgroundProperty, new SolidColorBrush(Color.Parse("#097969")) ),
+                    new Setter(Button.ContentProperty, "Start Server" )
+                }
+                });
+            }
+        }
+        private void ToggleHttpServer(object sender, RoutedEventArgs e) {
+            Button startButton = (Button)sender;
             ServerOptions options = (ServerOptions)startButton.DataContext;
-            if (options.IsLaunched)
+            if (!options.IsLaunched)
             {
                 Dispatcher.UIThread.InvokeAsync(() =>
-                {
+                {                    
                     options.server.Start();
                 });
             } else
@@ -70,14 +96,14 @@ namespace api_corelation.ViewModels
                     options.server.Stop();
                 });
             }
-            }
-        private ToggleButton LaunchControlInit(ServerOptions opt)
+            options.IsLaunched = !options.IsLaunched;
+            ToggleHttpServerStyle(options.IsLaunched, startButton);
+        }
+        private Button ToggleHttpServerButtonInit(ServerOptions opt)
         {
-            var AddServerButton = new ToggleButton();
-            //AddServerButton. = new Binding("") {
-            //    Source = opt.IsLaunched,
-            //    Mode=BindingMode.TwoWay};
-            AddServerButton.Click += LaunchServer;
+            var AddServerButton = new Button();
+            ToggleHttpServerStyle(opt.IsLaunched, AddServerButton);
+            AddServerButton.Click += ToggleHttpServer;
             return AddServerButton;
         }
 
@@ -90,13 +116,13 @@ namespace api_corelation.ViewModels
             };
             TextColumn<ServerOptions, string> PortColumn = new TextColumn<ServerOptions, string>("Port", x => x.Port, (r, v) => r.Port = v, options: EditOptions);
             TextColumn<ServerOptions, string> DirectoryColumn = new TextColumn<ServerOptions, string>("Directory", x => x.WorkingDirectory, (r, v) => r.WorkingDirectory = v, options: EditOptions);
-            TextColumn<ServerOptions, string[]> HeadersColumn = new TextColumn<ServerOptions, string[]>("Headers", x => x.Headers);
-            TemplateColumn<ServerOptions> ButtonColumn = new TemplateColumn<ServerOptions>("", new FuncDataTemplate<ServerOptions>((a, e) => LaunchControlInit(a), supportsRecycling: true));
+            //TreeDataGrid here. var HeadersColumn = new TreeDataGrid<ServerOptions, string[]>("Headers", x => x.Headers);
+            TemplateColumn<ServerOptions> ButtonColumn = new TemplateColumn<ServerOptions>("", new FuncDataTemplate<ServerOptions>((a, e) => ToggleHttpServerButtonInit(a), supportsRecycling: true));
             ServerGridData = new FlatTreeDataGridSource<ServerOptions>(ServerRows)
             {
                 Columns =
                 {
-                PortColumn, DirectoryColumn, HeadersColumn, ButtonColumn
+                PortColumn, DirectoryColumn, ButtonColumn //HeadersColumn
                 }
             };
             ServerGridData.Selection = new TreeDataGridCellSelectionModel<ServerOptions>(ServerGridData);
