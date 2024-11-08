@@ -18,28 +18,28 @@ namespace api_corelation.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        private ObservableCollection<ServerOptions>? _ServerRows;
-        public ObservableCollection<ServerOptions>? ServerRows
+        private ObservableCollection<HttpServerRunner>? _ServerRows;
+        public ObservableCollection<HttpServerRunner>? ServerRows
         {
             get => _ServerRows;
             set => this.RaiseAndSetIfChanged(ref _ServerRows, value);
         }
 
-        private FlatTreeDataGridSource<ServerOptions>? _ServerGridData;
-        public FlatTreeDataGridSource<ServerOptions>? ServerGridData
+        private FlatTreeDataGridSource<HttpServerRunner>? _ServerGridData;
+        public FlatTreeDataGridSource<HttpServerRunner>? ServerGridData
         {
             get => _ServerGridData;
             set => this.RaiseAndSetIfChanged(ref _ServerGridData, value);
         }
-        private ObservableCollection<ServerOptions>? _HeadersRows;
-        public ObservableCollection<ServerOptions>? HeadersRows
+        private ObservableCollection<HttpServerRunner>? _HeadersRows;
+        public ObservableCollection<HttpServerRunner>? HeadersRows
         {
             get => _HeadersRows;
             set => this.RaiseAndSetIfChanged(ref _HeadersRows, value);
         }
 
-        private FlatTreeDataGridSource<ServerOptions>? _HeaderGridData;
-        public FlatTreeDataGridSource<ServerOptions>? HeaderGridData
+        private FlatTreeDataGridSource<HttpServerRunner>? _HeaderGridData;
+        public FlatTreeDataGridSource<HttpServerRunner>? HeaderGridData
         {
             get => _HeaderGridData;
             set => this.RaiseAndSetIfChanged(ref _HeaderGridData, value);
@@ -54,7 +54,7 @@ namespace api_corelation.ViewModels
         public void AddServer()
         {
             var headers = new string[1] { "" };
-            var server = new ServerOptions("8080", "", headers);
+            var server = new HttpServerRunner();
             ServerRows.Add(server);
         }
         private void ToggleHttpServerStyle(bool status, Button button)
@@ -82,24 +82,24 @@ namespace api_corelation.ViewModels
         }
         private void ToggleHttpServer(object sender, RoutedEventArgs e) {
             Button startButton = (Button)sender;
-            ServerOptions options = (ServerOptions)startButton.DataContext;
-            if (!options.IsLaunched)
+            HttpServerRunner runner = (HttpServerRunner)startButton.DataContext;
+            if (!runner.IsLaunched)
             {
-                Dispatcher.UIThread.InvokeAsync(() =>
-                {                    
-                    options.server.Start();
+                Dispatcher.UIThread.Post(() =>
+                {
+                    runner.Start();
+                    ToggleHttpServerStyle(runner.IsLaunched, startButton);
                 });
             } else
             {
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    options.server.Stop();
+                    runner.Stop();
+                    ToggleHttpServerStyle(runner.IsLaunched, startButton);
                 });
             }
-            options.IsLaunched = !options.IsLaunched;
-            ToggleHttpServerStyle(options.IsLaunched, startButton);
         }
-        private Button ToggleHttpServerButtonInit(ServerOptions opt)
+        private Button ToggleHttpServerButtonInit(HttpServerRunner opt)
         {
             var AddServerButton = new Button();
             ToggleHttpServerStyle(opt.IsLaunched, AddServerButton);
@@ -109,28 +109,28 @@ namespace api_corelation.ViewModels
 
         public void TreeDataGridInit()
         {
-            var EditOptions = new TextColumnOptions<ServerOptions>
+            var EditOptions = new TextColumnOptions<HttpServerRunner>
             {
                 BeginEditGestures = BeginEditGestures.Tap,
                 MinWidth = new GridLength(80, GridUnitType.Pixel)
             };
-            TextColumn<ServerOptions, string> PortColumn = new TextColumn<ServerOptions, string>("Port", x => x.Port, (r, v) => r.Port = v, options: EditOptions);
-            TextColumn<ServerOptions, string> DirectoryColumn = new TextColumn<ServerOptions, string>("Directory", x => x.WorkingDirectory, (r, v) => r.WorkingDirectory = v, options: EditOptions);
-            //TreeDataGrid here. var HeadersColumn = new TreeDataGrid<ServerOptions, string[]>("Headers", x => x.Headers);
-            TemplateColumn<ServerOptions> ButtonColumn = new TemplateColumn<ServerOptions>("", new FuncDataTemplate<ServerOptions>((a, e) => ToggleHttpServerButtonInit(a), supportsRecycling: true));
-            ServerGridData = new FlatTreeDataGridSource<ServerOptions>(ServerRows)
+            TextColumn<HttpServerRunner, string> PortColumn = new TextColumn<HttpServerRunner, string>("Port", x => x.port, (r, v) => r.port = v, options: EditOptions);
+            TextColumn<HttpServerRunner, string> DirectoryColumn = new TextColumn<HttpServerRunner, string>("Directory", x => x.folder, (r, v) => r.folder = v, options: EditOptions);
+            //TreeDataGrid here. var HeadersColumn = new TreeDataGrid<HttpServerRunner, string[]>("Headers", x => x.Headers);
+            TemplateColumn<HttpServerRunner> ButtonColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleHttpServerButtonInit(a), supportsRecycling: true));
+            ServerGridData = new FlatTreeDataGridSource<HttpServerRunner>(ServerRows)
             {
                 Columns =
                 {
                 PortColumn, DirectoryColumn, ButtonColumn //HeadersColumn
                 }
             };
-            ServerGridData.Selection = new TreeDataGridCellSelectionModel<ServerOptions>(ServerGridData);
+            ServerGridData.Selection = new TreeDataGridCellSelectionModel<HttpServerRunner>(ServerGridData);
         }
         public MainWindowViewModel()
         {
             AddServerCommand = ReactiveCommand.Create(AddServer);
-            ServerRows = new ObservableCollection<ServerOptions>();
+            ServerRows = new ObservableCollection<HttpServerRunner>();
             TreeDataGridInit();
         }
     }
