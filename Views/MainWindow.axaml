@@ -16,8 +16,12 @@
 	<Border BorderThickness="1.5" BorderBrush="#D2B1A38E" IsVisible="True">
 		<StackPanel>
 			<Label Margin="10,5,10,0" BorderBrush="White">Simple Servers</Label>
-			<DockPanel>
-			</DockPanel>
+			<TabStrip>
+				<TabItem Header="Simple HTTP" FontSize="16"/>
+				<TabItem Header="Caddy" FontSize="16"/>
+			</TabStrip>
+				
+			
 			<Button Background="BlueViolet" Margin="10,10,10,10" Content="Add Server" Command="{Binding AddServerCommand}"></Button>
 			<TreeDataGrid Source="{Binding ServerGridData}" HorizontalAlignment="Stretch"
 			  BorderThickness="2" BorderBrush="Gray" CanUserResizeColumns="True">
