@@ -13,6 +13,9 @@ using Avalonia.Data;
 using Avalonia.Styling;
 using Avalonia.Media;
 using DynamicData.Kernel;
+using Avalonia.Platform.Storage;
+using Splat;
+using DynamicData;
 
 namespace api_corelation.ViewModels
 {
@@ -106,7 +109,20 @@ namespace api_corelation.ViewModels
             AddServerButton.Click += ToggleHttpServer;
             return AddServerButton;
         }
-
+        private Button FolderPickerInit()
+        {
+            
+            var btn = new Button();
+            return btn;
+        }
+        private DockPanel FolderPickerCell(string folder)
+        {
+            var panel = new DockPanel();
+            panel.Children.Add(new TextBlock());
+            panel.Children.Add(FolderPickerInit());
+            panel.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+            return panel;
+        }
         public void TreeDataGridInit()
         {
             var EditOptions = new TextColumnOptions<HttpServerRunner>
@@ -118,6 +134,7 @@ namespace api_corelation.ViewModels
             TextColumn<HttpServerRunner, string> DirectoryColumn = new TextColumn<HttpServerRunner, string>("Directory", x => x.folder, (r, v) => r.folder = v, options: EditOptions);
             //TreeDataGrid here. var HeadersColumn = new TreeDataGrid<HttpServerRunner, string[]>("Headers", x => x.Headers);
             TemplateColumn<HttpServerRunner> ButtonColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleHttpServerButtonInit(a), supportsRecycling: true));
+            //TemplateColumn<HttpServerRunner> DirectoryColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => FolderPickerCell(a.folder), supportsRecycling: true));
             ServerGridData = new FlatTreeDataGridSource<HttpServerRunner>(ServerRows)
             {
                 Columns =

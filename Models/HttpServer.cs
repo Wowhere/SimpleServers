@@ -1,174 +1,46 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using NetCoreServer;
+using System.Threading.Tasks;
+using System.Threading;
+using EmbedIO;
+using EmbedIO.Actions;
+using EmbedIO.WebApi;
+using EmbedIO.Files;
+using EmbedIO.Authentication;
 
 namespace api_corelation.Models
 {
-        class CommonCache
+    public class HttpServerRunner
+    {
+        public string port = "8080";
+        public string folder = "";
+        public bool IsLaunched = false;
+        CancellationToken ctSource;
+        private WebServer server;
+        public HttpServerRunner()
         {
-            public static CommonCache GetInstance()
-            {
-                if (_instance == null)
-                    _instance = new CommonCache();
-                return _instance;
-            }
-
-            public string GetAllCache()
-            {
-                var result = new StringBuilder();
-                result.Append("[\n");
-                foreach (var item in _cache)
-                {
-                    result.Append("  {\n");
-                    result.AppendFormat($"    \"key\": \"{item.Key}\",\n");
-                    result.AppendFormat($"    \"value\": \"{item.Value}\",\n");
-                    result.Append("  },\n");
-                }
-                result.Append("]\n");
-                return result.ToString();
-            }
-
-            public bool GetCacheValue(string key, out string value)
-            {
-                return _cache.TryGetValue(key, out value);
-            }
-
-            public void PutCacheValue(string key, string value)
-            {
-                _cache[key] = value;
-            }
-
-            public bool DeleteCacheValue(string key, out string value)
-            {
-                return _cache.TryRemove(key, out value);
-            }
-
-            private readonly ConcurrentDictionary<string, string> _cache = new ConcurrentDictionary<string, string>();
-            private static CommonCache _instance;
         }
-        class HttpCacheSession : HttpSession
+        public void Start()
         {
-            public HttpCacheSession(NetCoreServer.HttpServer server) : base(server) { }
-
-            protected override void OnReceivedRequest(HttpRequest request)
-            {
-                // Show HTTP request content
-                Console.WriteLine(request);
-
-                // Process HTTP request methods
-                if (request.Method == "HEAD")
-                    SendResponseAsync(Response.MakeHeadResponse());
-                else if (request.Method == "GET")
-                {
-                    string key = request.Url;
-
-                    // Decode the key value
-                    key = Uri.UnescapeDataString(key);
-                    key = key.Replace("/api/cache", "", StringComparison.InvariantCultureIgnoreCase);
-                    key = key.Replace("?key=", "", StringComparison.InvariantCultureIgnoreCase);
-
-                    if (string.IsNullOrEmpty(key))
-                    {
-                        // Response with all cache values
-                        SendResponseAsync(Response.MakeGetResponse(CommonCache.GetInstance().GetAllCache(), "application/json; charset=UTF-8"));
-                    }
-                    // Get the cache value by the given key
-                    else if (CommonCache.GetInstance().GetCacheValue(key, out var value))
-                    {
-                        // Response with the cache value
-                        SendResponseAsync(Response.MakeGetResponse(value));
-                    }
-                    else
-                        SendResponseAsync(Response.MakeErrorResponse(404, "Required cache value was not found for the key: " + key));
-                }
-                else if ((request.Method == "POST") || (request.Method == "PUT"))
-                {
-                    string key = request.Url;
-                    string value = request.Body;
-
-                    // Decode the key value
-                    key = Uri.UnescapeDataString(key);
-                    key = key.Replace("/api/cache", "", StringComparison.InvariantCultureIgnoreCase);
-                    key = key.Replace("?key=", "", StringComparison.InvariantCultureIgnoreCase);
-
-                    // Put the cache value
-                    CommonCache.GetInstance().PutCacheValue(key, value);
-
-                    // Response with the cache value
-                    SendResponseAsync(Response.MakeOkResponse());
-                }
-                else if (request.Method == "DELETE")
-                {
-                    string key = request.Url;
-
-                    // Decode the key value
-                    key = Uri.UnescapeDataString(key);
-                    key = key.Replace("/api/cache", "", StringComparison.InvariantCultureIgnoreCase);
-                    key = key.Replace("?key=", "", StringComparison.InvariantCultureIgnoreCase);
-
-                    // Delete the cache value
-                    if (CommonCache.GetInstance().DeleteCacheValue(key, out var value))
-                    {
-                        // Response with the cache value
-                        SendResponseAsync(Response.MakeGetResponse(value));
-                    }
-                    else
-                        SendResponseAsync(Response.MakeErrorResponse(404, "Deleted cache value was not found for the key: " + key));
-                }
-                else if (request.Method == "OPTIONS")
-                    SendResponseAsync(Response.MakeOptionsResponse());
-                else if (request.Method == "TRACE")
-                    SendResponseAsync(Response.MakeTraceResponse(request.Cache.Data));
-                else
-                    SendResponseAsync(Response.MakeErrorResponse("Unsupported HTTP method: " + request.Method));
-            }
-
-            protected override void OnReceivedRequestError(HttpRequest request, string error)
-            {
-                Console.WriteLine($"Request error: {error}");
-            }
-
-            protected override void OnError(SocketError error)
-            {
-                Console.WriteLine($"HTTP session caught an error: {error}");
-            }
+            var server = new WebServer(o => o
+                    .WithUrlPrefix("http://*:" + port)
+                    .WithMode(HttpListenerMode.EmbedIO))
+                    .WithLocalSessionManager()
+                // First, we will configure our web server by adding Modules.
+                .WithStaticFolder("/", folder, true, m => m
+                    .WithContentCaching()).WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Error" })));
+            server.RunAsync().ConfigureAwait(false);
+            IsLaunched = true;
         }
-        class HttpCacheServer : NetCoreServer.HttpServer
+        public void Stop()
         {
-            public HttpCacheServer(IPAddress address, int port) : base(address, port) { }
-
-            protected override TcpSession CreateSession() { return new HttpCacheSession(this); }
-
-            protected override void OnError(SocketError error)
+            using (var ctSource = new CancellationTokenSource())
             {
-                Console.WriteLine($"HTTP session caught an error: {error}");
+                //Task.WaitAll(
+                //RunWebServerAsync(url, ctSource.Token),
+                //    OpenBrowser ? ShowBrowserAsync(url.Replace("*", "localhost"), ctSource.Token) : Task.CompletedTask,
+                //    WaitForUserBreakAsync(ctSource.Cancel));
             }
+            IsLaunched = false;
         }
-        public class HttpServerRunner
-        {
-            public string port = "8080";
-            public string folder = "";
-            public bool IsLaunched = false;
-            private HttpCacheServer server;
-            public HttpServerRunner()
-            {
-            }
-            public void Start()
-            {
-                server = new HttpCacheServer(IPAddress.Any, int.Parse(port));
-                if (folder != "") {
-                    server.AddStaticContent(folder, "/");
-                };
-                IsLaunched = true;
-                server.Start();
-            }
-            public void Stop()
-            {
-                IsLaunched = false;
-                server.Stop();
-            }
-        }
+    }
 }
