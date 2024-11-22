@@ -13,14 +13,16 @@ namespace api_corelation.Models
     {
         public string port = "8080";
         public string folder = "";
+        public string status = "Not running";
         public bool IsLaunched = false;
-        CancellationToken ctSource;
+        CancellationTokenSource ctSource;
         private WebServer server;
         public HttpServerRunner()
         {
         }
         public void Start()
         {
+            ctSource = new CancellationTokenSource();
             var server = new WebServer(o => o
                     .WithUrlPrefix("http://*:" + port)
                     .WithMode(HttpListenerMode.EmbedIO))
@@ -28,18 +30,12 @@ namespace api_corelation.Models
                 // First, we will configure our web server by adding Modules.
                 .WithStaticFolder("/", folder, true, m => m
                     .WithContentCaching()).WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Error" })));
-            server.RunAsync().ConfigureAwait(false);
+            server.RunAsync(ctSource.Token).ConfigureAwait(false);
             IsLaunched = true;
         }
         public void Stop()
         {
-            using (var ctSource = new CancellationTokenSource())
-            {
-                //Task.WaitAll(
-                //RunWebServerAsync(url, ctSource.Token),
-                //    OpenBrowser ? ShowBrowserAsync(url.Replace("*", "localhost"), ctSource.Token) : Task.CompletedTask,
-                //    WaitForUserBreakAsync(ctSource.Cancel));
-            }
+            ctSource.Cancel();
             IsLaunched = false;
         }
     }

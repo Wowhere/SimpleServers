@@ -139,7 +139,7 @@ namespace api_corelation.ViewModels
             {
                 Columns =
                 {
-                PortColumn, DirectoryColumn, ButtonColumn //HeadersColumn
+                ButtonColumn, PortColumn, DirectoryColumn  //HeadersColumn
                 }
             };
             ServerGridData.Selection = new TreeDataGridCellSelectionModel<HttpServerRunner>(ServerGridData);
