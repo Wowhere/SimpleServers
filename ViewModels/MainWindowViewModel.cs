@@ -132,6 +132,7 @@ namespace api_corelation.ViewModels
             };
             TextColumn<HttpServerRunner, string> PortColumn = new TextColumn<HttpServerRunner, string>("Port", x => x.port, (r, v) => r.port = v, options: EditOptions);
             TextColumn<HttpServerRunner, string> DirectoryColumn = new TextColumn<HttpServerRunner, string>("Directory", x => x.folder, (r, v) => r.folder = v, options: EditOptions);
+            TextColumn<HttpServerRunner, string> StatusColumn = new TextColumn<HttpServerRunner, string>("Status", x => x.status);
             //TreeDataGrid here. var HeadersColumn = new TreeDataGrid<HttpServerRunner, string[]>("Headers", x => x.Headers);
             TemplateColumn<HttpServerRunner> ButtonColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleHttpServerButtonInit(a), supportsRecycling: true));
             //TemplateColumn<HttpServerRunner> DirectoryColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => FolderPickerCell(a.folder), supportsRecycling: true));
@@ -139,7 +140,7 @@ namespace api_corelation.ViewModels
             {
                 Columns =
                 {
-                ButtonColumn, PortColumn, DirectoryColumn  //HeadersColumn
+                ButtonColumn, PortColumn, DirectoryColumn, StatusColumn  //HeadersColumn
                 }
             };
             ServerGridData.Selection = new TreeDataGridCellSelectionModel<HttpServerRunner>(ServerGridData);
