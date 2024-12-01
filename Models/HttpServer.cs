@@ -9,7 +9,7 @@ using EmbedIO.Authentication;
 using EmbedIO.Routing;
 using System.Collections.Generic;
 
-namespace api_corelation.Models
+namespace simpleserver.Models
 {
     public class TestController : WebApiController
     {
@@ -27,7 +27,7 @@ namespace api_corelation.Models
     {
         public string port = "8080";
         public string folder = "";
-        public string status = "";
+        public string Status = "";
         public bool IsLaunched = false;
         public bool IsSecure = false;
         CancellationTokenSource ctSource;
@@ -47,21 +47,21 @@ namespace api_corelation.Models
                     .WithStaticFolder("/", folder, true, m => m.WithContentCaching())
                     .WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Error" })))
                     .WithWebApi("/", m => m.WithController<TestController>());
-                status = "Running";
+                Status = "Running";
                 IsLaunched = true;
                 server.RunAsync(ctSource.Token).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 IsLaunched = false;
-                status = ex.Message.ToString();
+                Status = ex.Message.ToString();
             }
         }
         public void Stop()
         {
             ctSource.Cancel();
             IsLaunched = false;
-            status = "Stopped";
+            Status = "Stopped";
         }
     }
 }

@@ -2,7 +2,8 @@
 using Avalonia.ReactiveUI;
 using System;
 
-namespace api_corelation
+namespace simpleserver
+
 {
     internal class Program
     {

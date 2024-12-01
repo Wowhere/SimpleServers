@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
 using System.Collections.ObjectModel;
-using api_corelation.Models;
+using simpleserver.Models;
 using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Controls.Selection;
@@ -16,9 +16,80 @@ using DynamicData.Kernel;
 using Avalonia.Platform.Storage;
 using Splat;
 using DynamicData;
+using EmbedIO.Actions;
+using EmbedIO.Routing;
+using EmbedIO.WebApi;
+using EmbedIO;
+using System.Threading;
+using System;
+using System;
+using System.Threading.Tasks;
+using System.Threading;
+using EmbedIO;
+using EmbedIO.Actions;
+using EmbedIO.WebApi;
+using EmbedIO.Files;
+using EmbedIO.Authentication;
+using EmbedIO.Routing;
+using System.Collections.Generic;
 
-namespace api_corelation.ViewModels
+namespace simpleserver.ViewModels
 {
+    public class TestController : WebApiController
+    {
+        [Route(HttpVerbs.Get, "/t")]
+        public string Test()
+        {
+            HttpContext.Response.Headers.Clear();
+            HttpContext.Response.Headers.Add("Server1: lol123");
+            return "testtest";
+        }
+        public TestController()
+        {
+        }
+
+    }
+    public class HttpServerRunner
+    {
+        public string port = "8080";
+        public string folder = "";
+        public string Status = "lol";
+        public bool IsLaunched = false;
+        public bool IsSecure = false;
+        CancellationTokenSource ctSource;
+        private WebServer server;
+        public HttpServerRunner()
+        {
+        }
+        public void Start()
+        {
+            try
+            {
+                ctSource = new CancellationTokenSource();
+                var server = new WebServer(o => o
+                    .WithUrlPrefix("http://*:" + port)
+                    .WithMode(HttpListenerMode.EmbedIO))
+                    .WithLocalSessionManager()
+                    .WithStaticFolder("/", folder, true, m => m.WithContentCaching())
+                    .WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Error" })))
+                    .WithWebApi("/", m => m.WithController<TestController>());
+                Status = "Running";
+                IsLaunched = true;
+                server.RunAsync(ctSource.Token).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                IsLaunched = false;
+                Status = ex.Message.ToString();
+            }
+        }
+        public void Stop()
+        {
+            ctSource.Cancel();
+            IsLaunched = false;
+            Status = "Stopped";
+        }
+    }
     public class MainWindowViewModel : ViewModelBase
     {
         private ObservableCollection<HttpServerRunner>? _ServerRows;
@@ -109,6 +180,12 @@ namespace api_corelation.ViewModels
             AddServerButton.Click += ToggleHttpServer;
             return AddServerButton;
         }
+        private Label StatusTextboxInit(HttpServerRunner opt)
+        {
+            var t = new Label();
+            t.Content = opt.Status;
+            return t;
+        }
         private Button FolderPickerInit()
         {
             
@@ -125,6 +202,8 @@ namespace api_corelation.ViewModels
         }
         public void TreeDataGridInit()
         {
+            var TextColumnLength = new GridLength(1, GridUnitType.Star);
+            var TemplateColumnLength = new GridLength(125, GridUnitType.Pixel);
             var EditOptions = new TextColumnOptions<HttpServerRunner>
             {
                 BeginEditGestures = BeginEditGestures.Tap,
@@ -132,10 +211,11 @@ namespace api_corelation.ViewModels
             };
             TextColumn<HttpServerRunner, string> PortColumn = new TextColumn<HttpServerRunner, string>("Port", x => x.port, (r, v) => r.port = v, options: EditOptions);
             TextColumn<HttpServerRunner, string> DirectoryColumn = new TextColumn<HttpServerRunner, string>("Directory", x => x.folder, (r, v) => r.folder = v, options: EditOptions);
-            TextColumn<HttpServerRunner, string> StatusColumn = new TextColumn<HttpServerRunner, string>("Status", x => x.status);
-            //TreeDataGrid here. var HeadersColumn = new TreeDataGrid<HttpServerRunner, string[]>("Headers", x => x.Headers);
+            //TemplateColumn<HttpServerRunner> StatusColumn = new TemplateColumn<HttpServerRunner>("Status", new FuncDataTemplate<HttpServerRunner>((a, e) => StatusTextboxInit(a), supportsRecycling: true));
+            //TemplateColumn<HttpServerRunner> StatusColumn = new TemplateColumn<HttpServerRunner>("Status", new FuncDataTemplate<HttpServerRunner>((a, e) => StatusTextboxInit(a), supportsRecycling: true));
+            //TextColumn<HttpServerRunner, string> StatusColumn = new TextColumn<HttpServerRunner, string>("Status", x => x.status, (r, v) => r.status = v, width: TextColumnLength);
+            TemplateColumn<HttpServerRunner> StatusColumn = new TemplateColumn<HttpServerRunner>("Status", "statusText", width: TemplateColumnLength);
             TemplateColumn<HttpServerRunner> ButtonColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleHttpServerButtonInit(a), supportsRecycling: true));
-            //TemplateColumn<HttpServerRunner> DirectoryColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => FolderPickerCell(a.folder), supportsRecycling: true));
             ServerGridData = new FlatTreeDataGridSource<HttpServerRunner>(ServerRows)
             {
                 Columns =

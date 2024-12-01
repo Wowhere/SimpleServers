@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
 
-namespace api_corelation.ViewModels
+namespace simpleserver.ViewModels
 {
     public class ViewModelBase : ReactiveObject
     {
