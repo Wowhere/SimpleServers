@@ -85,6 +85,7 @@ namespace simpleserver.Models
                 ctSource = new CancellationTokenSource();
                 //string certPath = $"File://{Application.streamingAssetsPath}/cert.pfx";
                 //var cert = new X509Certificate2(new X509Certificate($"{Application.streamingAssetsPath}/cert.pfx"));
+                Swan.Logging.Logger.RegisterLogger<ServerLogger>();
                 server = new WebServer(o => o
                     .WithUrlPrefix("http://*:" + port)
                     .WithMode(HttpListenerMode.EmbedIO))
@@ -96,7 +97,7 @@ namespace simpleserver.Models
                 //var options = new WebServerOptions()
                 //    .WithCertificate()
                 //    .WithAutoRegisterCertificate(true);
-                Swan.Logging.Logger.RegisterLogger<ServerLogger>();
+                //Swan.Logging.Logger.RegisterLogger<ServerLogger>();
                 Status = "Running";
                 ServerLogger logger = new ServerLogger();
                 Log = logger.GetCapturedLogs();
