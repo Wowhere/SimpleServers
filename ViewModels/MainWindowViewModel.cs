@@ -12,89 +12,17 @@ using Avalonia.Threading;
 using Avalonia.Data;
 using Avalonia.Styling;
 using Avalonia.Media;
-using DynamicData.Kernel;
-using Avalonia.Platform.Storage;
-using Splat;
-using DynamicData;
-using EmbedIO.Actions;
-using EmbedIO.Routing;
-using EmbedIO.WebApi;
-using EmbedIO;
-using System.Threading;
-using System;
-using System;
-using System.Threading.Tasks;
-using System.Threading;
-using EmbedIO;
-using EmbedIO.Actions;
-using EmbedIO.WebApi;
-using EmbedIO.Files;
-using EmbedIO.Authentication;
-using EmbedIO.Routing;
-using System.Collections.Generic;
+using System.ComponentModel;
+using Avalonia.OpenGL;
 
 namespace simpleserver.ViewModels
 {
-    public class TestController : WebApiController
-    {
-        [Route(HttpVerbs.Get, "/t")]
-        public string Test()
-        {
-            HttpContext.Response.Headers.Clear();
-            HttpContext.Response.Headers.Add("Server1: lol123");
-            return "testtest";
-        }
-        public TestController()
-        {
-        }
-
-    }
-    public class HttpServerRunner
-    {
-        public string port = "8080";
-        public string folder = "";
-        public string Status = "lol";
-        public bool IsLaunched = false;
-        public bool IsSecure = false;
-        CancellationTokenSource ctSource;
-        private WebServer server;
-        public HttpServerRunner()
-        {
-        }
-        public void Start()
-        {
-            try
-            {
-                ctSource = new CancellationTokenSource();
-                var server = new WebServer(o => o
-                    .WithUrlPrefix("http://*:" + port)
-                    .WithMode(HttpListenerMode.EmbedIO))
-                    .WithLocalSessionManager()
-                    .WithStaticFolder("/", folder, true, m => m.WithContentCaching())
-                    .WithModule(new ActionModule("/", HttpVerbs.Any, ctx => ctx.SendDataAsync(new { Message = "Error" })))
-                    .WithWebApi("/", m => m.WithController<TestController>());
-                Status = "Running";
-                IsLaunched = true;
-                server.RunAsync(ctSource.Token).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                IsLaunched = false;
-                Status = ex.Message.ToString();
-            }
-        }
-        public void Stop()
-        {
-            ctSource.Cancel();
-            IsLaunched = false;
-            Status = "Stopped";
-        }
-    }
     public class MainWindowViewModel : ViewModelBase
     {
         private ObservableCollection<HttpServerRunner>? _ServerRows;
         public ObservableCollection<HttpServerRunner>? ServerRows
         {
+
             get => _ServerRows;
             set => this.RaiseAndSetIfChanged(ref _ServerRows, value);
         }
@@ -154,6 +82,15 @@ namespace simpleserver.ViewModels
                 });
             }
         }
+        private void OpenLogViewer(object sender, RoutedEventArgs e)
+        {
+            var newWindow = new Window();
+            Button logButton = (Button)sender;
+            HttpServerRunner runner = (HttpServerRunner)logButton.DataContext;
+            newWindow.Title = "Server on " + runner.port + " port log";
+
+            newWindow.Show();
+        }
         private void ToggleHttpServer(object sender, RoutedEventArgs e) {
             Button startButton = (Button)sender;
             HttpServerRunner runner = (HttpServerRunner)startButton.DataContext;
@@ -173,6 +110,14 @@ namespace simpleserver.ViewModels
                 });
             }
         }
+        private Button ToggleViewLogButtonInit(HttpServerRunner opt)
+        {
+            var LogViewButton = new Button();
+            LogViewButton.Click += OpenLogViewer;
+            LogViewButton.Content = "View log";
+            return LogViewButton;
+        }
+
         private Button ToggleHttpServerButtonInit(HttpServerRunner opt)
         {
             var AddServerButton = new Button();
@@ -180,10 +125,10 @@ namespace simpleserver.ViewModels
             AddServerButton.Click += ToggleHttpServer;
             return AddServerButton;
         }
-        private Label StatusTextboxInit(HttpServerRunner opt)
+        private TextBox StatusTextboxInit(HttpServerRunner opt)
         {
-            var t = new Label();
-            t.Content = opt.Status;
+            var t = new TextBox();
+            t.Text = opt.Status;
             return t;
         }
         private Button FolderPickerInit()
@@ -209,18 +154,22 @@ namespace simpleserver.ViewModels
                 BeginEditGestures = BeginEditGestures.Tap,
                 MinWidth = new GridLength(80, GridUnitType.Pixel)
             };
+            var ReadOptions = new TextColumnOptions<HttpServerRunner>
+            {
+                BeginEditGestures = BeginEditGestures.None,
+                TextWrapping = TextWrapping.Wrap,
+                CanUserResizeColumn = false,
+            };
             TextColumn<HttpServerRunner, string> PortColumn = new TextColumn<HttpServerRunner, string>("Port", x => x.port, (r, v) => r.port = v, options: EditOptions);
             TextColumn<HttpServerRunner, string> DirectoryColumn = new TextColumn<HttpServerRunner, string>("Directory", x => x.folder, (r, v) => r.folder = v, options: EditOptions);
-            //TemplateColumn<HttpServerRunner> StatusColumn = new TemplateColumn<HttpServerRunner>("Status", new FuncDataTemplate<HttpServerRunner>((a, e) => StatusTextboxInit(a), supportsRecycling: true));
-            //TemplateColumn<HttpServerRunner> StatusColumn = new TemplateColumn<HttpServerRunner>("Status", new FuncDataTemplate<HttpServerRunner>((a, e) => StatusTextboxInit(a), supportsRecycling: true));
-            //TextColumn<HttpServerRunner, string> StatusColumn = new TextColumn<HttpServerRunner, string>("Status", x => x.status, (r, v) => r.status = v, width: TextColumnLength);
-            TemplateColumn<HttpServerRunner> StatusColumn = new TemplateColumn<HttpServerRunner>("Status", "statusText", width: TemplateColumnLength);
+            TextColumn<HttpServerRunner, string> StatusColumn = new TextColumn<HttpServerRunner, string>("Status", x => x.Status, options: ReadOptions);
             TemplateColumn<HttpServerRunner> ButtonColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleHttpServerButtonInit(a), supportsRecycling: true));
+            TemplateColumn<HttpServerRunner> LogColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleViewLogButtonInit(a), supportsRecycling: true));
             ServerGridData = new FlatTreeDataGridSource<HttpServerRunner>(ServerRows)
             {
                 Columns =
                 {
-                ButtonColumn, PortColumn, DirectoryColumn, StatusColumn  //HeadersColumn
+                ButtonColumn, PortColumn, DirectoryColumn, StatusColumn, LogColumn  //HeadersColumn
                 }
             };
             ServerGridData.Selection = new TreeDataGridCellSelectionModel<HttpServerRunner>(ServerGridData);

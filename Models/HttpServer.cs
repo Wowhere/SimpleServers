@@ -8,6 +8,7 @@ using EmbedIO.Files;
 using EmbedIO.Authentication;
 using EmbedIO.Routing;
 using System.Collections.Generic;
+using ReactiveUI;
 
 namespace simpleserver.Models
 {
@@ -23,11 +24,12 @@ namespace simpleserver.Models
         }
 
     }
-    public class HttpServerRunner
+    public class HttpServerRunner : ReactiveObject
     {
         public string port = "8080";
         public string folder = "";
-        public string Status = "";
+        public string Status = "Init";
+        public string Log = "";
         public bool IsLaunched = false;
         public bool IsSecure = false;
         CancellationTokenSource ctSource;

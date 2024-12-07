@@ -25,11 +25,11 @@
 			<Button Background="BlueViolet" Margin="10,10,10,10" Content="Add Server" Command="{Binding AddServerCommand}"></Button>
 			<TreeDataGrid Source="{Binding ServerGridData}" HorizontalAlignment="Stretch"
 			  BorderThickness="2" BorderBrush="Gray" CanUserResizeColumns="True">
-				<TreeDataGrid.Resources>
+				<!--<TreeDataGrid.Resources>
 					<DataTemplate x:CompileBindings="True" x:Key="statusText" DataType="vm:HttpServerRunner">
 						<TextBox Text="{Binding Status}"></TextBox>
 					</DataTemplate>
-				</TreeDataGrid.Resources>
+				</TreeDataGrid.Resources>-->
 			</TreeDataGrid>
 		</StackPanel>
 	</Border>
