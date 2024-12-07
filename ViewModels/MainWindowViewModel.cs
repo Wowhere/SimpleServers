@@ -12,8 +12,8 @@ using Avalonia.Threading;
 using Avalonia.Data;
 using Avalonia.Styling;
 using Avalonia.Media;
-using System.ComponentModel;
-using Avalonia.OpenGL;
+using AvaloniaEdit.Document;
+using Avalonia;
 
 namespace simpleserver.ViewModels
 {
@@ -84,11 +84,25 @@ namespace simpleserver.ViewModels
         }
         private void OpenLogViewer(object sender, RoutedEventArgs e)
         {
-            var newWindow = new Window();
+            var newWindow = new Window() { DataContext = new MainWindowViewModel()};
+            newWindow.AttachDevTools();
             Button logButton = (Button)sender;
-            HttpServerRunner runner = (HttpServerRunner)logButton.DataContext;
-            newWindow.Title = "Server on " + runner.port + " port log";
 
+            
+
+            HttpServerRunner runner = (HttpServerRunner)logButton.DataContext;
+            newWindow.Title = "Server on " + runner.port + " port log...";
+            var logTextBox = new AvaloniaEdit.TextEditor();
+            var logText = new TextDocument(runner.Log.ToString());
+            logTextBox.DataContext = newWindow.DataContext;
+            logTextBox.Document = logText;
+            logTextBox.ShowLineNumbers = true;
+            logTextBox.IsReadOnly = true;
+            logTextBox.BorderBrush = new SolidColorBrush(Color.Parse("#D70040"));
+            var panel = new DockPanel();
+
+            panel.Children.Add(logTextBox);
+            newWindow.Content = panel;
             newWindow.Show();
         }
         private void ToggleHttpServer(object sender, RoutedEventArgs e) {
