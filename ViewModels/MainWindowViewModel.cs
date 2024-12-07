@@ -93,7 +93,7 @@ namespace simpleserver.ViewModels
             HttpServerRunner runner = (HttpServerRunner)logButton.DataContext;
             newWindow.Title = "Server on " + runner.port + " port log...";
             var logTextBox = new AvaloniaEdit.TextEditor();
-            var logText = new TextDocument(runner.Log.ToString());
+            var logText = new TextDocument(runner.Log);
             logTextBox.DataContext = newWindow.DataContext;
             logTextBox.Document = logText;
             logTextBox.ShowLineNumbers = true;

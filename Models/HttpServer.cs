@@ -11,22 +11,45 @@ using ReactiveUI;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using Swan;
+using System.IO;
+using System.Text;
 
 namespace simpleserver.Models
 {
     public class ServerLogger : Swan.Logging.ILogger
     {
         public Swan.Logging.LogLevel LogLevel =>
-            Swan.Logging.LogLevel.Info | Swan.Logging.LogLevel.Error | Swan.Logging.LogLevel.Trace | Swan.Logging.LogLevel.Debug | Swan.Logging.LogLevel.Warning;
-
+            Swan.Logging.LogLevel.Debug;
+        private MemoryStream memoryStream = new MemoryStream() {};
+        private StreamWriter logWriter;
+        //private StreamReader logReader;
         public void Dispose()
         {
             throw new NotImplementedException();
         }
-
+        public ServerLogger()
+        {
+            logWriter = new StreamWriter(memoryStream);
+        }
         public void Log(Swan.Logging.LogMessageReceivedEventArgs logEvent)
         {
-            Debug.Write("Logger window opened");
+            using (logWriter)
+            {
+                logWriter.WriteLine(logEvent.CallerLineNumber);
+                logWriter.WriteLine(logEvent.UtcDate);
+                logWriter.WriteLine(logEvent.Message);
+                logWriter.WriteLine(logEvent.Exception);
+            }
+            //Debug.Write(logEvent.ToJson());
+        }
+        public string GetCapturedLogs()
+        {
+            string line = "";
+            using (var reader = new StreamReader(memoryStream))
+            {
+                line = reader.ReadToEnd();
+            }
+            return line;
         }
     }
     public class TestController : WebApiController
@@ -34,7 +57,7 @@ namespace simpleserver.Models
         [Route(HttpVerbs.Get, "/_test")]
         public string Test() {
             HttpContext.Response.Headers.Clear();
-            HttpContext.Response.Headers.Add("Server1: Test Server");
+            HttpContext.Response.Headers.Add("Server: Test Server");
             return "Test OK";
         }
         public TestController() {
@@ -62,7 +85,7 @@ namespace simpleserver.Models
                 ctSource = new CancellationTokenSource();
                 //string certPath = $"File://{Application.streamingAssetsPath}/cert.pfx";
                 //var cert = new X509Certificate2(new X509Certificate($"{Application.streamingAssetsPath}/cert.pfx"));
-                var server = new WebServer(o => o
+                server = new WebServer(o => o
                     .WithUrlPrefix("http://*:" + port)
                     .WithMode(HttpListenerMode.EmbedIO))
                     .WithLocalSessionManager()
@@ -76,7 +99,7 @@ namespace simpleserver.Models
                 Swan.Logging.Logger.RegisterLogger<ServerLogger>();
                 Status = "Running";
                 ServerLogger logger = new ServerLogger();
-                Log = logger.Log("lol");
+                Log = logger.GetCapturedLogs();
                 IsLaunched = true;
                 server.RunAsync(ctSource.Token).ConfigureAwait(false);
             }
