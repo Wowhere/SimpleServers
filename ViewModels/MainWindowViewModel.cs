@@ -14,6 +14,7 @@ using Avalonia.Styling;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using Avalonia;
+using simpleserver.Views;
 
 namespace simpleserver.ViewModels
 {
@@ -32,19 +33,6 @@ namespace simpleserver.ViewModels
         {
             get => _ServerGridData;
             set => this.RaiseAndSetIfChanged(ref _ServerGridData, value);
-        }
-        private ObservableCollection<HttpServerRunner>? _HeadersRows;
-        public ObservableCollection<HttpServerRunner>? HeadersRows
-        {
-            get => _HeadersRows;
-            set => this.RaiseAndSetIfChanged(ref _HeadersRows, value);
-        }
-
-        private FlatTreeDataGridSource<HttpServerRunner>? _HeaderGridData;
-        public FlatTreeDataGridSource<HttpServerRunner>? HeaderGridData
-        {
-            get => _HeaderGridData;
-            set => this.RaiseAndSetIfChanged(ref _HeaderGridData, value);
         }
         private bool _IsStarted = false;
         public bool IsStarted
@@ -124,6 +112,12 @@ namespace simpleserver.ViewModels
                 });
             }
         }
+        private void ServerConfigWindow(object sender, RoutedEventArgs e) 
+        {
+            var btn = (Button)sender;
+            var codeWindow = new HeaderWindow() { DataContext = new HeaderWindowViewModel((HttpServerRunner)btn.DataContext) };
+            codeWindow.Show();
+        }
         private Button ToggleViewLogButtonInit(HttpServerRunner opt)
         {
             var LogViewButton = new Button();
@@ -138,6 +132,13 @@ namespace simpleserver.ViewModels
             ToggleHttpServerStyle(opt.IsLaunched, AddServerButton);
             AddServerButton.Click += ToggleHttpServer;
             return AddServerButton;
+        }
+        private Button ServerConfigButtonInit(HttpServerRunner opt)
+        {
+            var AddHeaderButton = new Button();
+            AddHeaderButton.Click += ServerConfigWindow;
+            AddHeaderButton.Content = "Config";
+            return AddHeaderButton;
         }
         private TextBox StatusTextboxInit(HttpServerRunner opt)
         {
@@ -178,12 +179,13 @@ namespace simpleserver.ViewModels
             TextColumn<HttpServerRunner, string> DirectoryColumn = new TextColumn<HttpServerRunner, string>("Directory", x => x.folder, (r, v) => r.folder = v, options: EditOptions);
             TextColumn<HttpServerRunner, string> StatusColumn = new TextColumn<HttpServerRunner, string>("Status", x => x.Status, options: ReadOptions);
             TemplateColumn<HttpServerRunner> ButtonColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleHttpServerButtonInit(a), supportsRecycling: true));
-            TemplateColumn<HttpServerRunner> LogColumn = new TemplateColumn<HttpServerRunner>("", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleViewLogButtonInit(a), supportsRecycling: true));
+            TemplateColumn<HttpServerRunner> LogColumn = new TemplateColumn<HttpServerRunner>("Log", new FuncDataTemplate<HttpServerRunner>((a, e) => ToggleViewLogButtonInit(a), supportsRecycling: true));
+            TemplateColumn<HttpServerRunner> ServerConfigColumn = new TemplateColumn<HttpServerRunner>("Config", new FuncDataTemplate<HttpServerRunner>((a, e) => ServerConfigButtonInit(a), supportsRecycling: true));
             ServerGridData = new FlatTreeDataGridSource<HttpServerRunner>(ServerRows)
             {
                 Columns =
                 {
-                ButtonColumn, PortColumn, DirectoryColumn, StatusColumn, LogColumn  //HeadersColumn
+                ButtonColumn, PortColumn, ServerConfigColumn, DirectoryColumn, StatusColumn, LogColumn  //HeadersColumn
                 }
             };
             ServerGridData.Selection = new TreeDataGridCellSelectionModel<HttpServerRunner>(ServerGridData);

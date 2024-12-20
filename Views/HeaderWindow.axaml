@@ -4,23 +4,19 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:m="using:simpleserver.Models"
-		xmlns:local="using:simpleserver.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="simpleserver.Views.MainWindow"
+        x:Class="simpleserver.Views.HeaderWindow"
 		x:CompileBindings="True"
-        x:DataType="vm:MainWindowViewModel"
+        x:DataType="vm:HeaderWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-	    WindowStartupLocation="CenterScreen"
-		ExtendClientAreaToDecorationsHint="True"
-		ExtendClientAreaTitleBarHeightHint="-1"
 		>
 	<Window.Styles>
 	</Window.Styles>
 	<Border BorderThickness="1.5" BorderBrush="#D2B1A38E" IsVisible="True">
 		<StackPanel>
-			<Label Margin="10,5,10,0" BorderBrush="White">Simple Servers</Label>
-			<Button Background="BlueViolet" Margin="10,10,10,10" Content="Add Server" Command="{Binding AddServerCommand}"></Button>
-			<TreeDataGrid Source="{Binding ServerGridData}" HorizontalAlignment="Stretch"
+			<Label Margin="10,5,10,0" BorderBrush="White">Headers</Label>
+			<Button Background="Green" Margin="10,10,10,10" Content="Add Header" Command="{Binding AddHeader}"></Button>
+			<TreeDataGrid Source="{Binding HeaderGridData}" HorizontalAlignment="Stretch"
 			  BorderThickness="2" BorderBrush="Gray" CanUserResizeColumns="True">
 			</TreeDataGrid>
 		</StackPanel>
